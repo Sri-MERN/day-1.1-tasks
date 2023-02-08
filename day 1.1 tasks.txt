@@ -1,0 +1,226 @@
+1.Difference between HTTP1.1 and HTTP2
+
+What is HTTP?
+If you are new to this theme, continue to read this block, but if you’re familiar with this, skip this paragraph and go straight forward to the next one.
+
+For those that are new to this theme, Hypertext Transfer Protocol (HTTP) is an application protocol that is, currently, the foundation of data communication for the World Wide Web.
+
+HTTP is based on the Client/Server model. Client/Server model can be explained as two computers, Client (receiver of service) and Server (provider of service) that are communicating via requests and responses.
+
+A simple and abstract example would be a restaurant guest and a waiter. The guest (Client) asks (sends request) waiter (Server) for a meal, then the waiter gets the meal from the restaurant chef (your application logic) and brings the meal to the guest.
+
+This is a very simplistic example, but it is also the one that will help you understand the concept.
+
+There are many more interesting HTTP concepts and utilities to discuss, but the star of this post is (not enough) famous HTTP/2.
+
+What is HTTP/2?
+In 2015, Internet Engineering Task Force (IETF) release HTTP/2, the second major version of the most useful internet protocol, HTTP. It was derived from the earlier experimental SPDY protocol.
+
+Main goals of developing HTTP/2 was:
+
+Protocol negotiation mechanism — protocol electing, eg. HTTP/1.1, HTTP/2 or other.
+High-level compatibility with HTTP/1.1 — methods, status codes, URIs and header fields.
+
+Page load speed improvements trough:
+Compression of request headers
+Binary protocol
+HTTP/2 Server Push
+Request multiplexing over a single TCP connection
+Request pipelining
+HOL blocking (Head-of-line) — Package blocking
+Request multiplexing
+HTTP/2 can send multiple requests for data in parallel over a single TCP connection. This is the most advanced feature of the HTTP/2 protocol because it allows you to download web files asynchronously from one server. Most modern browsers limit TCP connections to one server.
+
+
+This reduces additional round trip time (RTT), making your website load faster without any optimization, and makes domain sharding unnecessary.
+
+Header compression
+HTTP/2 compress a large number of redundant header frames. It uses the HPACK specification as a simple and secure approach to header compression. Both client and server maintain a list of headers used in previous client-server requests.
+
+HPACK compresses the individual value of each header before it is transferred to the server, which then looks up the encoded information in a list of previously transferred header values to reconstruct the full header information.
+
+
+Binary protocol
+The latest HTTP version has evolved significantly in terms of capabilities and attributes such as transforming from a text protocol to a binary protocol. HTTP1.x used to process text commands to complete request-response cycles. HTTP/2 will use binary commands (in 1s and 0s) to execute the same tasks. This attribute eases complications with framing and simplifies implementation of commands that were confusingly intermixed due to commands containing text and optional spaces.
+
+Browsers using HTTP/2 implementation will convert the same text commands into binary before transmitting it over the network.
+
+
+Benefits:
+
+Low overhead in parsing data — a critical value proposition in HTTP/2 vs HTTP1.
+Less prone to errors.
+Lighter network footprint.
+Effective network resource utilization.
+Eliminating security concerns associated with the textual nature of HTTP1.x such as response splitting attacks.
+Enables other capabilities of the HTTP/2 including compression, multiplexing, prioritization, flow control and effective handling of TLS.
+Compact representation of commands for easier processing and implementation.
+Efficient and robust in terms of processing of data between client and server.
+Reduced network latency and improved throughput.
+HTTP/2 Server Push
+This capability allows the server to send additional cacheable information to the client that isn’t requested but is anticipated in future requests. For example, if the client requests for the resource X and it is understood that the resource Y is referenced with the requested file, the server can choose to push Y along with X instead of waiting for an appropriate client request.
+
+
+Benefits:
+
+The client saves pushed resources in the cache.
+The client can reuse these cached resources across different pages.
+The server can multiplex pushed resources along with originally requested information within the same TCP connection.
+The server can prioritize pushed resources — a key performance differentiator in HTTP/2 vs HTTP1.
+The client can decline pushed resources to maintain an effective repository of cached resources or disable Server Push entirely.
+The client can also limit the number of pushed streams multiplexed concurrently.
+If you remember the story about a guest in a restaurant and waiter, that would be an example
+
+for HTTP/1.1 and HTTP/2 protocol with a slight difference. Imagine that waiters are TCP connections and you want to order your meal and a bottle of water. For HTTP/1.1 that would mean that you ask one waiter for your meal and another one for water, hence you would allocate two TCP connections. For HTTP/2 that would mean that you ask only one waiter for both, but he brings them separately. You only allocate one TCP connection and that will already result with lower server load, plus the server would have one extra free connection (waiter) for the next client (guest).
+
+The real difference between HTTP/1.1 and HTTP/2 comes with server push example.
+
+Imagine that the guest (Client) asks (sends request) waiter (Server) for a meal, then the waiter gets the meal from the restaurant chef (your application logic), but the waiter also thinks you would need a bottle of water so he brings that too with your meal. The end result of this would be only one TCP connection and only one request that will significantly lower the server load.
+
+As a simple showcase of those mechanics, I made a simple page example.
+
+
+What we have here is a simple page with 100 images of checks which I’ll use to demonstrate HTTP/1.1, HTTP/2 AND HTTP/2 server push.
+
+What is important to note in the picture above are number of requests, load time, protocol column, initiator column and waterfall diagram itself (we can see how requests are made through multiple batches, unfortunately, it is hard to see other data from it except TTFB and content download time; eg. resource scheduling and connection start time).
+
+For HTTP/1.1:
+
+Number of requests: 102
+
+Load time: 12.97s
+
+Protocol: “http/1.1”
+
+Initiator column: Initiator of the first one is user/client and the rest of the requests are initiated by the response to client who realizes he needs some other resources (in this case, images).
+
+Waterfall diagram: We can see how requests are made through multiple batches (TCP connections).
+
+For HTTP/2:
+
+Number of requests: 102
+
+Load time: 11.19s
+
+Protocol: “h2” (HTTP/2)
+
+Initiator column: Initiator of the first one is user/client and the rest of the requests are initiated by response to client who realizes he needs some other resources (in this case, images).
+
+Waterfall diagram: We can see how requests are made through 2 batches (TCP connections).
+
+Take note of the load time. In this case, it is a bit lower than the load time of HTTP/1.1 example but it doesn’t have to be always. This example shows the multiplexing of client requests.
+
+HTTP/2 server push:
+
+Number of requests: 102
+
+Load time: 3.17 s
+
+Protocol: “h2” (HTTP/2)
+
+Initiator column: Initiator of the first one is user/client and the rest of requests are initiated by the push of the server (virtually one request/response cycle).
+
+Waterfall diagram: We can see how requests are made through 1 batch (1 TCP connection).
+
+Browser Compatibility
+
+Most of the modern browser fully support HTTP/2 protocol with an exception (red) of Opera mini (all versions) and UC Browser for Android. There are also the ones that have partial support (light green) like IE11.
+
+You can find more details on browser support on this link https://caniuse.com/#feat=http2
+
+Use HTTP/2 and speed up your site
+HTTP/2 provides us with many new mechanics that will mitigate HTTP/1.1 issues and ones that will boost your web page performance. Currently, it is widely supported by web clients so its implementation is painless. Although implementation of HTTP/2 protocol is easy you should have in mind that with it you will probably have to change the mechanics (like serving assets to the client) to use the full potential of this protocol.
+
+
+         
+
+       2.Blog on object and internal representation in JavaScript
+
+
+First of all, I would pin point that never be confused with JavaScript object and other language object concept they differ a lot internally. so, people who come from different language like Java/c++ they make a biggest mistake to compare with JavaScript object with others.
+
+Coming to the point,
+
+In simple terms. “A JavaScript object is a collection of named values having state and behaviour (properties and method)”.
+
+For example: Person, car, pen, bike, Personal Computer , Washing Machine etc.
+
+Take the case of cars.
+
+All cars have the same properties, but the property values differ from car to car. All cars have the same methods, but the methods are performed at different times.
+
+No alt text provided for this image
+Let’s have an example of my favourite merc car and list out its properties(Features):
+
+Make: Mercedes 
+Model: C-Class
+Colour: White
+Fuel: Diesel
+Weight: 850kg
+Mileage: 8Kmpl
+Rating: 4.5
+Taking the above as reference, I'll stress up on objects, Object properties and Methods.
+
+1)Objects:
+The following code assigns a simple value (Mercedes) to a variable named car:
+
+var car = "Mercedes";
+Objects are variables too. But objects can contain many values.
+
+The following code assigns many values (Mercedes, C-class, White and soo on) to a variable named Car:
+
+var car = {Make: “Mercedes”, Model: “C-Class”, Color: “White”, Fuel: Diesel, Weight: “850kg”, Mileage: “8Kmpl”, Rating: 4.5};
+The values are written as name:value pairs (name and value separated by a colon).
+
+Syntax:
+
+var <object-name> = {key1: value1, key2: value2,... keyN: valueN};
+So, conclusion and definition for JS objects is “JavaScript objects are containers for named values”.
+
+2)Object Properties
+The name:values pairs (in JavaScript objects) are called properties.
+
+var car = {Make: “Mercedes”, Model: “C-Class”, Color: “White”, Fuel: Diesel, Weight: “850kg”,Mileage: “8Kmpl”, Rating: 4.5};
+From the above snippet, let’s have a look what falls under property and property value:
+
+No alt text provided for this image
+The object properties can be different primitive values, other objects and functions.
+
+Properties can usually be changed, added, and deleted, but some are read only.
+
+The syntax for adding a property to an object is :
+
+ObjectName.ObjectProperty = propertyValue;
+The syntax for deleting a property from an object is:
+
+delete ObjectName.ObjectProperty;
+The syntax to access a property from an object is:
+
+objectName.property        // Car.Make
+
+           //or
+
+objectName["property”]    // Car["Make"]
+
+          //or
+
+
+objectName[expression]   // x = "Make"; Car[x]
+So, Conclusion and simple definition for Java Script properties is “Properties are the values associated with a JavaScript object”.
+
+3)Object Methods
+An object method is an object property containing a function definition.
+
+i.e.,
+
+Let’s assume to start the car there will be a mechanical functionality.
+
+function(){return ignition.on}
+and so similar is to stop/brake/headlights on & off, etc.
+
+ (I’m just trying to roll a picture in your mind. The car will not start / stop by means of code. I assume you’d get it).
+
+You can also look into many examples & operations here.
+
+So, Conclusion and simple definition for Java Script Object methods is “Methods are actions that can be performed on objects.”.
+
